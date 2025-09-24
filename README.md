@@ -1,3 +1,94 @@
+
+🔧 Step 1: Update & Install Required Packages
+sudo apt update && sudo apt upgrade -y
+sudo apt install openjdk-11-jdk maven mysql-server git -y
+
+
+(JDK 11 works fine, but if you want exactly JDK 8, install openjdk-8-jdk)
+
+Verify:
+
+java -version
+mvn -v
+
+🔧 Step 2: Install & Configure Apache Tomcat
+cd /opt
+sudo wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.95/bin/apache-tomcat-9.0.95.tar.gz
+sudo tar -xvzf apache-tomcat-9.0.95.tar.gz
+sudo mv apache-tomcat-9.0.95 tomcat9
+sudo chmod +x /opt/tomcat9/bin/*.sh
+
+
+Start Tomcat:
+
+/opt/tomcat9/bin/startup.sh
+
+
+Check if it runs → http://your-server-ip:8080
+
+🔧 Step 3: Setup MySQL Database
+sudo mysql -u root -p
+
+
+Run the provided schema:
+
+create database onlinebookstore;
+use onlinebookstore;
+
+-- paste the SQL script from README here
+
+
+Create a user for the app:
+
+create user 'bookuser'@'localhost' identified by 'StrongPassword123';
+grant all privileges on onlinebookstore.* to 'bookuser'@'localhost';
+flush privileges;
+exit;
+
+🔧 Step 4: Clone & Build the Project
+cd /opt
+git clone https://github.com/shashirajraja/onlinebookstore.git
+cd onlinebookstore
+
+
+Update src/main/resources/application.properties with MySQL details:
+
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/onlinebookstore
+db.username=bookuser
+db.password=StrongPassword123
+
+
+Build with Maven:
+
+mvn clean install
+
+
+It will generate a .war file in target/onlinebookstore.war.
+
+🔧 Step 5: Deploy WAR to Tomcat
+
+Copy the WAR file:
+
+sudo cp target/onlinebookstore.war /opt/tomcat9/webapps/
+
+
+Restart Tomcat:
+
+/opt/tomcat9/bin/shutdown.sh
+/opt/tomcat9/bin/startup.sh
+
+
+Check:
+👉 http://your-server-ip:8080/onlinebookstore
+
+Login with:
+
+Admin/Admin
+
+shashi/shashi
+
+
 # <a href="https://youtu.be/mLFPodZO8Iw" target="_blank"> OnlineBookStore </a> 
 - A Java Web Developement Project
 - **Youtube VIDEO** for step by step Local Setup Guide : https://youtu.be/mLFPodZO8Iw
