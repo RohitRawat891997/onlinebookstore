@@ -1,92 +1,153 @@
+# 📚 OnlineBookStore Deployment Guide (Ubuntu Server)
 
-🔧 Step 1: Update & Install Required Packages
+This guide explains how to deploy the **OnlineBookStore Java Servlet Project** on an Ubuntu server with **Tomcat, MySQL, and Maven**.
+
+---
+
+## 🔧 Step 1: Update & Install Required Packages
+```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install openjdk-11-jdk maven mysql-server git -y
+👉 JDK 11 works fine, but if you want exactly JDK 8, install:
 
+bash
+Copy code
+sudo apt install openjdk-8-jdk -y
+Verify installation:
 
-(JDK 11 works fine, but if you want exactly JDK 8, install openjdk-8-jdk)
-
-Verify:
-
+bash
+Copy code
 java -version
 mvn -v
-
 🔧 Step 2: Install & Configure Apache Tomcat
+bash
+Copy code
 cd /opt
 sudo wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.95/bin/apache-tomcat-9.0.95.tar.gz
 sudo tar -xvzf apache-tomcat-9.0.95.tar.gz
 sudo mv apache-tomcat-9.0.95 tomcat9
 sudo chmod +x /opt/tomcat9/bin/*.sh
-
-
 Start Tomcat:
 
+bash
+Copy code
 /opt/tomcat9/bin/startup.sh
-
-
 Check if it runs → http://your-server-ip:8080
 
 🔧 Step 3: Setup MySQL Database
+Login:
+
+bash
+Copy code
 sudo mysql -u root -p
+Create the database and user:
 
-
-Run the provided schema:
-
+sql
+Copy code
 create database onlinebookstore;
-use onlinebookstore;
-
--- paste the SQL script from README here
-
-
-Create a user for the app:
-
 create user 'bookuser'@'localhost' identified by 'StrongPassword123';
 grant all privileges on onlinebookstore.* to 'bookuser'@'localhost';
 flush privileges;
 exit;
+📂 Step 4: Dummy Database Initialization
+Reconnect to MySQL:
 
-🔧 Step 4: Clone & Build the Project
+bash
+Copy code
+mysql -u bookuser -p onlinebookstore
+Run this SQL script:
+
+sql
+Copy code
+-- Switch to the database
+USE onlinebookstore;
+
+-- Books table
+CREATE TABLE IF NOT EXISTS books(
+  barcode VARCHAR(100) PRIMARY KEY,
+  name VARCHAR(100),
+  author VARCHAR(100),
+  price INT,
+  quantity INT
+);
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users(
+  username VARCHAR(100) PRIMARY KEY,
+  password VARCHAR(100),
+  firstname VARCHAR(100),
+  lastname VARCHAR(100),
+  address TEXT,
+  phone VARCHAR(100),
+  mailid VARCHAR(100),
+  usertype INT
+);
+
+-- Insert sample books
+INSERT INTO books VALUES
+('9780134190563','The Go Programming Language','Alan A. A. Donovan and Brian W. Kernighan',400,8),
+('9780133053036','C++ Primer','Stanley Lippman and Josée Lajoie and Barbara Moo',976,13),
+('9781718500457','The Rust Programming Language','Steve Klabnik and Carol Nichols',560,12),
+('9781491910740','Head First Java','Kathy Sierra and Bert Bates and Trisha Gee',754,23),
+('9781492056300','Fluent Python','Luciano Ramalho',1014,5),
+('9781720043997','The Road to Learn React','Robin Wieruch',239,18),
+('9780132350884','Clean Code: A Handbook of Agile Software Craftsmanship','Robert C Martin',288,3),
+('9780132181273','Domain-Driven Design','Eric Evans',560,28),
+('9781951204006','A Programmers Guide to Computer Science','William Springer',188,4),
+('9780316204552','The Soul of a New Machine','Tracy Kidder',293,30),
+('9780132778046','Effective Java','Joshua Bloch',368,21),
+('9781484255995','Practical Rust Projects','Shing Lyu',257,15);
+
+-- Insert sample users
+INSERT INTO users VALUES
+('demo','demo','Demo','User','Demo Home','42502216225','demo@gmail.com',2),
+('Admin','Admin','Mr.','Admin','Haldia WB','9584552224521','admin@gmail.com',1),
+('shashi','shashi','Shashi','Raj','Bihar','1236547089','shashi@gmail.com',2);
+
+COMMIT;
+🔧 Step 5: Clone & Build the Project
+bash
+Copy code
 cd /opt
 git clone https://github.com/shashirajraja/onlinebookstore.git
 cd onlinebookstore
-
-
 Update src/main/resources/application.properties with MySQL details:
 
+properties
+Copy code
 db.driver=com.mysql.cj.jdbc.Driver
 db.url=jdbc:mysql://localhost:3306/onlinebookstore
 db.username=bookuser
 db.password=StrongPassword123
-
-
 Build with Maven:
 
+bash
+Copy code
 mvn clean install
+👉 This generates target/onlinebookstore.war.
 
-
-It will generate a .war file in target/onlinebookstore.war.
-
-🔧 Step 5: Deploy WAR to Tomcat
-
+🔧 Step 6: Deploy WAR to Tomcat
 Copy the WAR file:
 
+bash
+Copy code
 sudo cp target/onlinebookstore.war /opt/tomcat9/webapps/
-
-
 Restart Tomcat:
 
+bash
+Copy code
 /opt/tomcat9/bin/shutdown.sh
 /opt/tomcat9/bin/startup.sh
-
-
-Check:
+🚀 Access the Application
+Visit:
 👉 http://your-server-ip:8080/onlinebookstore
 
-Login with:
+Login Credentials
+Admin: Admin / Admin
 
-Admin/Admin
+User: shashi / shashi
 
-shashi/shashi
+
 
 
 # <a href="https://youtu.be/mLFPodZO8Iw" target="_blank"> OnlineBookStore </a> 
