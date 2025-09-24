@@ -1,152 +1,123 @@
-# 📚 OnlineBookStore Deployment Guide (Ubuntu Server)
 
-This guide explains how to deploy the **OnlineBookStore Java Servlet Project** on an Ubuntu server with **Tomcat, MySQL, and Maven**.
+📚 OnlineBookStore Deployment Guide (Ubuntu Server)
 
----
+A step-by-step guide to deploy the OnlineBookStore Java Servlet Project on Ubuntu with Tomcat, MySQL, and Maven.
+This guide also includes dummy data for testing.
 
-## 🔧 Step 1: Update & Install Required Packages
-```bash
+✅ Prerequisites
+
+Make sure you have:
+
+Ubuntu Server (22.04+ recommended)
+
+SSH access (or terminal access)
+
+Basic knowledge of Linux commands
+
+1️⃣ Install Required Packages
+
+Update the system and install Java, Maven, MySQL, and Git:
+
 sudo apt update && sudo apt upgrade -y
-sudo apt install openjdk-11-jdk maven mysql-server git -y
-👉 JDK 11 works fine, but if you want exactly JDK 8, install:
+sudo apt install openjdk-21-jdk maven mysql-server git -y
 
-bash
-Copy code
-sudo apt install openjdk-8-jdk -y
-Verify installation:
 
-bash
-Copy code
+⚠️ Optional: For JDK 21:
+
+sudo apt install openjdk-21-jdk -y
+
+
+Verify installations:
+
 java -version
 mvn -v
-🔧 Step 2: Install & Configure Apache Tomcat
-bash
-Copy code
+
+2️⃣ Install & Configure Apache Tomcat
+
+Download Tomcat:
+
 cd /opt
 sudo wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.95/bin/apache-tomcat-9.0.95.tar.gz
+
+
+Extract and set permissions:
+
 sudo tar -xvzf apache-tomcat-9.0.95.tar.gz
 sudo mv apache-tomcat-9.0.95 tomcat9
 sudo chmod +x /opt/tomcat9/bin/*.sh
+
+
 Start Tomcat:
 
-bash
-Copy code
 /opt/tomcat9/bin/startup.sh
-Check if it runs → http://your-server-ip:8080
 
-🔧 Step 3: Setup MySQL Database
-Login:
 
-bash
-Copy code
+Check Tomcat is running → http://your-server-ip:8080
+
+3️⃣ Setup MySQL Database
+
+Login to MySQL:
+
 sudo mysql -u root -p
-Create the database and user:
 
-sql
-Copy code
-create database onlinebookstore;
-create user 'bookuser'@'localhost' identified by 'StrongPassword123';
-grant all privileges on onlinebookstore.* to 'bookuser'@'localhost';
-flush privileges;
-exit;
-📂 Step 4: Dummy Database Initialization
-Reconnect to MySQL:
 
-bash
-Copy code
-mysql -u bookuser -p onlinebookstore
-Run this SQL script:
+Create database and user:
 
-sql
-Copy code
--- Switch to the database
-USE onlinebookstore;
+CREATE DATABASE onlinebookstore;
+CREATE USER 'bookuser'@'localhost' IDENTIFIED BY 'StrongPassword123';
+GRANT ALL PRIVILEGES ON onlinebookstore.* TO 'bookuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
 
--- Books table
-CREATE TABLE IF NOT EXISTS books(
-  barcode VARCHAR(100) PRIMARY KEY,
-  name VARCHAR(100),
-  author VARCHAR(100),
-  price INT,
-  quantity INT
-);
+create database if not exists onlinebookstore;
 
--- Users table
-CREATE TABLE IF NOT EXISTS users(
-  username VARCHAR(100) PRIMARY KEY,
-  password VARCHAR(100),
-  firstname VARCHAR(100),
-  lastname VARCHAR(100),
-  address TEXT,
-  phone VARCHAR(100),
-  mailid VARCHAR(100),
-  usertype INT
-);
+use onlinebookstore;
 
--- Insert sample books
-INSERT INTO books VALUES
-('9780134190563','The Go Programming Language','Alan A. A. Donovan and Brian W. Kernighan',400,8),
-('9780133053036','C++ Primer','Stanley Lippman and Josée Lajoie and Barbara Moo',976,13),
-('9781718500457','The Rust Programming Language','Steve Klabnik and Carol Nichols',560,12),
-('9781491910740','Head First Java','Kathy Sierra and Bert Bates and Trisha Gee',754,23),
-('9781492056300','Fluent Python','Luciano Ramalho',1014,5),
-('9781720043997','The Road to Learn React','Robin Wieruch',239,18),
-('9780132350884','Clean Code: A Handbook of Agile Software Craftsmanship','Robert C Martin',288,3),
-('9780132181273','Domain-Driven Design','Eric Evans',560,28),
-('9781951204006','A Programmers Guide to Computer Science','William Springer',188,4),
-('9780316204552','The Soul of a New Machine','Tracy Kidder',293,30),
-('9780132778046','Effective Java','Joshua Bloch',368,21),
-('9781484255995','Practical Rust Projects','Shing Lyu',257,15);
+create table if not exists books(barcode varchar(100) primary key, name varchar(100), author varchar(100), price int, quantity int);
 
--- Insert sample users
-INSERT INTO users VALUES
-('demo','demo','Demo','User','Demo Home','42502216225','demo@gmail.com',2),
-('Admin','Admin','Mr.','Admin','Haldia WB','9584552224521','admin@gmail.com',1),
-('shashi','shashi','Shashi','Raj','Bihar','1236547089','shashi@gmail.com',2);
+create table if not exists users(username varchar(100) primary key,password varchar(100), firstname varchar(100),
+    lastname varchar(100),address text, phone varchar(100),mailid varchar(100),usertype int);
+    
+5️⃣ Clone & Build the Project
 
-COMMIT;
-🔧 Step 5: Clone & Build the Project
-bash
-Copy code
+Clone repository:
+
 cd /opt
 git clone https://github.com/shashirajraja/onlinebookstore.git
 cd onlinebookstore
-Update src/main/resources/application.properties with MySQL details:
 
-properties
-Copy code
+
+Update database connection in src/main/resources/application.properties:
+
 db.driver=com.mysql.cj.jdbc.Driver
 db.url=jdbc:mysql://localhost:3306/onlinebookstore
 db.username=bookuser
 db.password=StrongPassword123
+
+
 Build with Maven:
 
-bash
-Copy code
 mvn clean install
-👉 This generates target/onlinebookstore.war.
 
-🔧 Step 6: Deploy WAR to Tomcat
-Copy the WAR file:
 
-bash
-Copy code
+This generates the WAR file: target/onlinebookstore.war
+
+6️⃣ Deploy WAR to Tomcat
+
+Copy WAR file to Tomcat:
+
 sudo cp target/onlinebookstore.war /opt/tomcat9/webapps/
+
+
 Restart Tomcat:
 
-bash
-Copy code
 /opt/tomcat9/bin/shutdown.sh
 /opt/tomcat9/bin/startup.sh
-🚀 Access the Application
-Visit:
-👉 http://your-server-ip:8080/onlinebookstore
 
-Login Credentials
-Admin: Admin / Admin
+7️⃣ Access the Application
 
-User: shashi / shashi
-
+Open your browser:
+http://your-server-ip:8080/onlinebookstore
 
 
 
